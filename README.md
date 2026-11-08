@@ -1,10 +1,10 @@
-# Blindlog API Server
+# VinoGuessr API Server
 
 > [!WARNING]
 > This API/service has not been released yet. Destructive changes can happen when they better align the schema and implementation with the intended design.
 
-- https://api.blindlog.me/
-- Documents https://api.blindlog.me/documents
+- https://api.vinoguessr.com/
+- Documents https://api.vinoguessr.com/documents
 
 ## Development Policy
 
@@ -59,7 +59,7 @@ unset so Atlas applies the baseline SQL normally.
 
 ```sh
 container run --rm \
-  --name blindlog-postgres \
+  --name vinoguessr-postgres \
   -e "POSTGRES_PASSWORD=test_password" \
   -e "POSTGRES_USER=test_user" \
   -e "POSTGRES_DB=test_database" \
@@ -71,7 +71,7 @@ container run --rm \
 
 ```sh
 container run --rm \
-  --name blindlog-valkey \
+  --name vinoguessr-valkey \
   -p 6379:6379 \
   valkey/valkey:8.1.4
 ```
@@ -80,7 +80,7 @@ container run --rm \
 
 ```sh
 container run --rm \
-  --name blindlog-otel-collector \
+  --name vinoguessr-otel-collector \
   -p 4317:4317 \
   -p 4318:4318 \
   -v "$PWD/Deploy/local/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml" \

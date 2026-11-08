@@ -7,11 +7,11 @@ variable "allow_unauthenticated" {
 variable "api_hostname" {
   description = "Public hostname served through Cloudflare and the Google external HTTPS load balancer."
   type        = string
-  default     = "api.blindlog.me"
+  default     = "api.vinoguessr.com"
 
   validation {
     condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$", var.api_hostname))
-    error_message = "api_hostname must be a lowercase DNS hostname, e.g. \"api.blindlog.me\"."
+    error_message = "api_hostname must be a lowercase DNS hostname, e.g. \"api.vinoguessr.com\"."
   }
 }
 
@@ -23,7 +23,7 @@ variable "app_env" {
 variable "artifact_repo_id" {
   description = "Artifact Registry repository ID."
   type        = string
-  default     = "blindlog-api"
+  default     = "vinoguessr-api"
 }
 
 variable "cpu" {
@@ -58,11 +58,11 @@ variable "deploy_branch" {
 variable "github_repo" {
   description = "GitHub repo allowed to assume the deployer service account, in `owner/name` form."
   type        = string
-  default     = "zunda-pixel/blindlog-api"
+  default     = "vinoguessr/vinoguessr-api"
 
   validation {
     condition     = can(regex("^[^/]+/[^/]+$", var.github_repo))
-    error_message = "github_repo must be in `owner/name` form, e.g. \"zunda-pixel/blindlog-api\"."
+    error_message = "github_repo must be in `owner/name` form, e.g. \"vinoguessr/vinoguessr-api\"."
   }
 }
 
@@ -108,7 +108,7 @@ variable "min_instance_count" {
 variable "otel_collector_config_secret_id" {
   description = "Secret Manager secret ID that stores the OpenTelemetry Collector config."
   type        = string
-  default     = "blindlog-otel-collector-config"
+  default     = "vinoguessr-otel-collector-config"
 }
 
 variable "otel_collector_cpu" {
@@ -159,5 +159,5 @@ variable "restrict_direct_cloud_run_ingress" {
 variable "service_name" {
   description = "Cloud Run service name."
   type        = string
-  default     = "blindlog-api"
+  default     = "vinoguessr-api"
 }

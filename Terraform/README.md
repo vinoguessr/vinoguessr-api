@@ -1,4 +1,4 @@
-# blindlog-api Terraform (prod)
+# vinoguessr-api Terraform (prod)
 
 Cloud Run / Artifact Registry / Secret Manager / IAM を Terraform で管理する。
 Image のビルドと push、Cloud Run への反映は GitHub Actions が行う (`.github/workflows/deploy.yml`)。
@@ -11,7 +11,7 @@ Image のビルドと push、Cloud Run への反映は GitHub Actions が行う 
 - **Terraform 実行**: 当面オペレータ手元から (GHA で terraform apply は回さない)
 - **環境**: prod のみ
 - **Observability**: Cloud Run の OpenTelemetry Collector sidecar / Collector 設定 Secret / 実行時 IAM は Terraform で管理する
-- **公開経路**: `api.blindlog.me` は Cloudflare proxied DNS → Google global external HTTPS Load Balancer → Cloud Run serverless NEG で公開する。Cloud Armor は Cloudflare proxy IP のみ許可する。
+- **公開経路**: `api.vinoguessr.com` は Cloudflare proxied DNS → Google global external HTTPS Load Balancer → Cloud Run serverless NEG で公開する。Cloud Armor は Cloudflare proxy IP のみ許可する。
 - **公開範囲**: `allow_unauthenticated = true` は維持する。`restrict_direct_cloud_run_ingress = true` にすると Cloud Run は external load balancer 経由のみ受け付け、外部からの `*.run.app` 直アクセスを拒否する。
 
 ## Bootstrap 手順 (初回のみ)
@@ -63,23 +63,23 @@ cp terraform.tfvars.example terraform.tfvars
 $EDITOR terraform.tfvars
 ```
 
-`cloudflare_zone_id` には `blindlog.me` の Cloudflare zone ID を入れる。Terraform provider 用の `CLOUDFLARE_API_TOKEN` は DNS edit 権限を持つ token を環境変数で渡す。アプリが Secret Manager から読む `CLOUDFLARE_API_TOKEN` とは用途が別なので、同じ値にする必要はない。
+`cloudflare_zone_id` には `vinoguessr.com` の Cloudflare zone ID を入れる。Terraform provider 用の `CLOUDFLARE_API_TOKEN` は DNS edit 権限を持つ token を環境変数で渡す。アプリが Secret Manager から読む `CLOUDFLARE_API_TOKEN` とは用途が別なので、同じ値にする必要はない。
 
-Cloudflare の SSL/TLS mode は Terraform では変更しない。Cloudflare Dashboard で `Full (strict)` になっていることを確認してから `api.blindlog.me` を公開する。
+Cloudflare の SSL/TLS mode は Terraform では変更しない。Cloudflare Dashboard で `Full (strict)` になっていることを確認してから `api.vinoguessr.com` を公開する。
 
 ### 5. `terraform init`
 
 ```sh
 terraform init \
   -backend-config="bucket=$STATE_BUCKET" \
-  -backend-config="prefix=blindlog-api"
+  -backend-config="prefix=vinoguessr-api"
 ```
 
 ### 6. 既存リソースを import
 
 現在 Google Cloud コンソールで動いている Cloud Run サービスを destroy/recreate すると本番が落ちる。以下を先に import する。
 
-> **ブラウンフィールド注意**: 過去に手動で作った同名リソース (例: `blindlog-api-runtime` SA、`github-pool` WIF pool、Artifact Registry repo) が残っている場合、初回 apply で `Already Exists` エラーになる。下記の Cloud Run / AR / Secret に加え、既存の SA や WIF pool/provider があれば同様に import する (resource address は `terraform plan` の create 計画から逆引き)。新規プロジェクトでの bootstrap なら不要。
+> **ブラウンフィールド注意**: 過去に手動で作った同名リソース (例: `vinoguessr-api-runtime` SA、`github-pool` WIF pool、Artifact Registry repo) が残っている場合、初回 apply で `Already Exists` エラーになる。下記の Cloud Run / AR / Secret に加え、既存の SA や WIF pool/provider があれば同様に import する (resource address は `terraform plan` の create 計画から逆引き)。新規プロジェクトでの bootstrap なら不要。
 
 ```sh
 # 直前に手順 0 の env が export されていることを確認
@@ -88,11 +88,11 @@ test -n "$PROJECT_ID" -a -n "$REGION" || { echo "PROJECT_ID/REGION not set"; exi
 
 # 既存 Cloud Run service
 terraform import google_cloud_run_v2_service.api \
-  "projects/$PROJECT_ID/locations/$REGION/services/blindlog-api"
+  "projects/$PROJECT_ID/locations/$REGION/services/vinoguessr-api"
 
 # Artifact Registry repo (すでに作っている場合のみ)
 terraform import google_artifact_registry_repository.app \
-  "projects/$PROJECT_ID/locations/$REGION/repositories/blindlog-api"
+  "projects/$PROJECT_ID/locations/$REGION/repositories/vinoguessr-api"
 
 # 既存の Secret Manager secret (1個ずつ)
 terraform import 'google_secret_manager_secret.app["POSTGRES_PASSWORD"]' \
@@ -108,7 +108,7 @@ terraform import 'google_secret_manager_secret.app["OTP_SECRET_KEY"]' \
 
 # OTel Collector config secret (手動作成済みの場合のみ)
 terraform import google_secret_manager_secret.otel_collector_config \
-  "projects/$PROJECT_ID/secrets/blindlog-otel-collector-config"
+  "projects/$PROJECT_ID/secrets/vinoguessr-otel-collector-config"
 ```
 
 (既存の secret_id が上と違う場合は Google Cloud コンソールで確認して合わせる。)
@@ -156,9 +156,9 @@ terraform apply
 
 Cloud Run service, OTel Collector sidecar, WIF pool/provider, deployer SA, IAM bindings などの新規リソースが作成される。
 
-### 10.5. `api.blindlog.me` の二段階 rollout
+### 10.5. `api.vinoguessr.com` の二段階 rollout
 
-`restrict_direct_cloud_run_ingress` はデフォルトで `true` になっており、Cloud Run の `*.run.app` 直アクセスを拒否する。初回 bootstrap では Load Balancer / Cloud Armor / Certificate Manager / Cloudflare DNS を作るため、`terraform.tfvars` に以下を一時的に追加して apply する。既存の `api.blindlog.me` DNS record が Cloudflare にある場合は、先に削除するか Terraform に import してから apply する。
+`restrict_direct_cloud_run_ingress` はデフォルトで `true` になっており、Cloud Run の `*.run.app` 直アクセスを拒否する。初回 bootstrap では Load Balancer / Cloud Armor / Certificate Manager / Cloudflare DNS を作るため、`terraform.tfvars` に以下を一時的に追加して apply する。既存の `api.vinoguessr.com` DNS record が Cloudflare にある場合は、先に削除するか Terraform に import してから apply する。
 
 ```hcl
 restrict_direct_cloud_run_ingress = false
@@ -169,7 +169,7 @@ terraform apply
 terraform output -raw api_health_url
 ```
 
-Certificate Manager の証明書と certificate map entry が `ACTIVE` になり、`https://api.blindlog.me/health` が 200 を返すまで待つ。証明書発行には数分から 1 時間程度かかる場合がある。
+Certificate Manager の証明書と certificate map entry が `ACTIVE` になり、`https://api.vinoguessr.com/health` が 200 を返すまで待つ。証明書発行には数分から 1 時間程度かかる場合がある。
 
 疎通確認後、`terraform.tfvars` から `restrict_direct_cloud_run_ingress = false` を削除して再 apply する。`allow_unauthenticated = true` と `restrict_direct_cloud_run_ingress = false` を常用すると、Cloudflare / Cloud Armor を通らない direct access で `CF-Connecting-IP` を信頼できなくなるため、bootstrap 後は必ず direct ingress を制限する。
 
@@ -177,7 +177,7 @@ Certificate Manager の証明書と certificate map entry が `ACTIVE` になり
 terraform apply
 ```
 
-この状態では `https://api.blindlog.me` は通り、外部からの Cloud Run `*.run.app` 直アクセスは Cloud Run ingress で拒否される。
+この状態では `https://api.vinoguessr.com` は通り、外部からの Cloud Run `*.run.app` 直アクセスは Cloud Run ingress で拒否される。
 
 ### 11. GitHub 側の設定
 
@@ -187,8 +187,8 @@ terraform apply
 |---|---|
 | `GOOGLE_CLOUD_PROJECT` | `terraform.tfvars` の `project_id` |
 | `GOOGLE_CLOUD_REGION` | `terraform.tfvars` の `region` |
-| `GOOGLE_CLOUD_SERVICE_NAME` | `terraform.tfvars` の `service_name` (未指定なら `blindlog-api`) |
-| `GOOGLE_CLOUD_ARTIFACT_REPO` | `terraform.tfvars` の `artifact_repo_id` (未指定なら `blindlog-api`) |
+| `GOOGLE_CLOUD_SERVICE_NAME` | `terraform.tfvars` の `service_name` (未指定なら `vinoguessr-api`) |
+| `GOOGLE_CLOUD_ARTIFACT_REPO` | `terraform.tfvars` の `artifact_repo_id` (未指定なら `vinoguessr-api`) |
 | `GOOGLE_CLOUD_WIF_PROVIDER` | `terraform output -raw wif_provider` |
 | `GOOGLE_CLOUD_DEPLOYER_SA` | `terraform output -raw deployer_sa_email` |
 
@@ -213,14 +213,14 @@ Cloud Run の env / scaling / resources / OTel Collector 設定などは `terraf
 printf '%s' "<new>" | gcloud secrets versions add <secret-id> --data-file=-
 ```
 
-アプリ用 Secret は `version = "latest"` 参照なので、次回リビジョン作成時に新しい値が読まれる。すぐ反映させたい場合は GHA deploy を回すか、`gcloud run services update blindlog-api --region=$REGION --update-env-vars=_DUMMY=$(date +%s)` のような空更新で新リビジョンを作る。
+アプリ用 Secret は `version = "latest"` 参照なので、次回リビジョン作成時に新しい値が読まれる。すぐ反映させたい場合は GHA deploy を回すか、`gcloud run services update vinoguessr-api --region=$REGION --update-env-vars=_DUMMY=$(date +%s)` のような空更新で新リビジョンを作る。
 
 ### Image ロールバック
 
 過去の SHA を指定して手で回す (Bootstrap 手順 0 と同じ `PROJECT_ID`/`REGION` を export しておく):
 
 ```sh
-gcloud run services update blindlog-api \
+gcloud run services update vinoguessr-api \
   --region="$REGION" \
-  --image="$REGION-docker.pkg.dev/$PROJECT_ID/blindlog-api/blindlog-api:<OLD_SHA>"
+  --image="$REGION-docker.pkg.dev/$PROJECT_ID/vinoguessr-api/vinoguessr-api:<OLD_SHA>"
 ```

@@ -30,7 +30,7 @@ extension API {
 
     let message = EmailMessage(
       to: normalizedEmail,
-      from: "support@blindlog.me",
+      from: "support@vinoguessr.com",
       subject: "Confirm your email",
       text: otpPassword
     )

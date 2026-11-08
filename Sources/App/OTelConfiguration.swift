@@ -13,7 +13,7 @@ func makeOTelConfiguration(
   // defaults via standard OTEL_* environment variables when needed
   // (e.g. running collector on a non-localhost host in compose.yml).
   var configuration = OTel.Configuration.default
-  configuration.serviceName = "blindlog-api"
+  configuration.serviceName = "vinoguessr-api"
   configuration.diagnosticLogLevel = .warning
   configuration.propagators = [.traceContext]
   configuration.logs.level = .from(logLevel ?? arguments.logLevel ?? .info)
@@ -29,7 +29,7 @@ func makeOTelConfiguration(
     "gcp.cloud_run.configuration": config.string(forKey: "k.configuration") ?? "unknown",
     "gcp.cloud_run.revision": cloudRunRevision,
     "gcp.cloud_run.service": config.string(forKey: "k.service") ?? "unknown",
-    "service.namespace": "blindlog",
+    "service.namespace": "vinoguessr",
     "service.version": cloudRunRevision,
   ]
 

@@ -1951,7 +1951,7 @@
         const label = (email ?? '').trim() || userID;
         return {
           challenge: base64ToUint8Array(challenge),
-          rp: { name: document.title || 'BlindLog', id: window.location.hostname },
+          rp: { name: document.title || 'VinoGuessr', id: window.location.hostname },
           user: {
             id: encoder.encode(userID),
             name: label,

@@ -6,6 +6,6 @@ provider "google" {
 
   default_labels = {
     managed_by = "terraform"
-    service    = "blindlog-api"
+    service    = "vinoguessr-api"
   }
 }
