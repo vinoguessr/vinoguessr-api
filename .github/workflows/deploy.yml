@@ -6,13 +6,13 @@ on:
   schedule:
     - cron: "0 21 * * *"
   # Manual redeploys (first image of a new project, applying a rotated secret).
-  # Workload Identity Federation trusts only this workflow on main, so other refs are skipped.
   workflow_dispatch:
 
 # Serialize prod deploys but never cancel an in-flight one — overwriting an
-# image mid-rollout produces unpredictable revisions.
+# image mid-rollout produces unpredictable revisions. The group is per ref, so a
+# manual run from another branch cannot replace a pending main deploy.
 concurrency:
-  group: deploy-prod
+  group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -21,7 +21,6 @@ permissions:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ vars.GOOGLE_CLOUD_PROJECT }}
@@ -33,6 +32,14 @@ jobs:
       POSTGRES_DB: ${{ vars.POSTGRES_DB }}
       ATLAS_BASELINE_VERSION: ${{ vars.ATLAS_BASELINE_VERSION }}
     steps:
+      # Workload Identity Federation trusts only this workflow on main; fail visibly
+      # instead of reporting success for a manual run that deployed nothing.
+      - name: Require main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Deploy runs only from main, not ${GITHUB_REF}"
+          exit 1
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: auth
