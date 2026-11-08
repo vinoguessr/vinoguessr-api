@@ -86,7 +86,7 @@ This GitHub review is in addition to the independent Review Agent running in par
 
 Shared rules source: `vinoguessr/.github@01fd9c61bce2139beb8ea173339d45c02d49b69f`.
 
-Business API for users, events, questions, answers, scores, images, and Apple Wallet passes. Built with Swift 6 / Hummingbird / PostgreSQL / PostgresNIO / Valkey / Atlas / OpenAPI / Swift OpenAPI Generator.
+Business API for users, events, questions, answers, scores, and images, with Apple Wallet event passes in progress. Built with Swift 6 / Hummingbird / PostgreSQL / PostgresNIO / Valkey / Atlas / OpenAPI / Swift OpenAPI Generator.
 
 PostgreSQL is the source of truth for business data. Valkey is limited to passkey challenges, one-time codes, rate limits, and caches. A Security Review Agent is required for changes to authentication, personal data, event participation authorization, scoring, or Apple Wallet pass signing. Building container images, applying Atlas migrations, and rolling out to Cloud Run run in this repository's GitHub Actions.
 

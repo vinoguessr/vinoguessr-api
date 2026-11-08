@@ -26,6 +26,9 @@ DerivedData
 
 ## Postgres Temporary File
 dump.rdb
+
+# VinoGuessr foundation baseline (vinoguessr/.github)
+__pycache__/
 !.env.example
 .build/
 .swiftpm/

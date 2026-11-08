@@ -90,7 +90,7 @@ container run --rm \
 <!-- vinoguessr-foundation -->
 ## Scope
 
-Business API for users, events, questions, answers, scores, images, and Apple Wallet passes. Built with Swift 6 / Hummingbird / PostgreSQL / PostgresNIO / Valkey / Atlas / OpenAPI / Swift OpenAPI Generator.
+Business API for users, events, questions, answers, scores, and images, with Apple Wallet event passes in progress. Built with Swift 6 / Hummingbird / PostgreSQL / PostgresNIO / Valkey / Atlas / OpenAPI / Swift OpenAPI Generator.
 
 ## Architecture
 

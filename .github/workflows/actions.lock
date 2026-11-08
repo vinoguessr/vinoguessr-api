@@ -5,43 +5,25 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/atlas.yml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
-        - 'actions/checkout@v7.0.1'
     '.github/workflows/ci.yml':
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
-        - 'actions/cache@v6.1.0'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
-        - 'actions/checkout@v7.0.1'
         - 'docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc'
-        - 'docker/build-push-action@v7.4.0'
         - 'docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069'
-        - 'docker/setup-buildx-action@v4.4.1'
         - 'hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e'
-        - 'hashicorp/setup-terraform@v4.0.1'
     '.github/workflows/deploy.yml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
-        - 'actions/checkout@v7.0.1'
         - 'docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc'
-        - 'docker/build-push-action@v7.4.0'
         - 'docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069'
-        - 'docker/setup-buildx-action@v4.4.1'
         - 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093'
-        - 'google-github-actions/auth@v3.0.0'
         - 'google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db'
-        - 'google-github-actions/setup-gcloud@v3.0.1'
     '.github/workflows/release.yml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
-        - 'actions/checkout@v7.0.1'
     '.github/workflows/repository.yml': []
     '.github/workflows/verify-lockfile.yml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
-        - 'actions/checkout@v7.0.1'
 dependencies:
     'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9':
-        ref: 'v6.1.0'
-        commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
-        owner_id: 44036562
-        repo_id: 215566462
-    'actions/cache@v6.1.0':
         ref: 'v6.1.0'
         commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         owner_id: 44036562
@@ -51,17 +33,7 @@ dependencies:
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
-    'actions/checkout@v7.0.1':
-        ref: 'v7.0.1'
-        commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
-        owner_id: 44036562
-        repo_id: 197814629
     'docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc':
-        ref: 'v7.4.0'
-        commit: 'sha1-c3c9e263c25d99ce0380d002d59b67737d91b0dc'
-        owner_id: 5429470
-        repo_id: 241092383
-    'docker/build-push-action@v7.4.0':
         ref: 'v7.4.0'
         commit: 'sha1-c3c9e263c25d99ce0380d002d59b67737d91b0dc'
         owner_id: 5429470
@@ -71,17 +43,7 @@ dependencies:
         commit: 'sha1-f87e5991a6d7451dcb8d9637bfbc97413f497069'
         owner_id: 5429470
         repo_id: 288485773
-    'docker/setup-buildx-action@v4.4.1':
-        ref: 'v4.4.1'
-        commit: 'sha1-f87e5991a6d7451dcb8d9637bfbc97413f497069'
-        owner_id: 5429470
-        repo_id: 288485773
     'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093':
-        ref: 'v3.0.0'
-        commit: 'sha1-7c6bc770dae815cd3e89ee6cdf493a5fab2cc093'
-        owner_id: 71461757
-        repo_id: 407242578
-    'google-github-actions/auth@v3.0.0':
         ref: 'v3.0.0'
         commit: 'sha1-7c6bc770dae815cd3e89ee6cdf493a5fab2cc093'
         owner_id: 71461757
@@ -91,17 +53,7 @@ dependencies:
         commit: 'sha1-aa5489c8933f4cc7a4f7d45035b3b1440c9c10db'
         owner_id: 71461757
         repo_id: 219865964
-    'google-github-actions/setup-gcloud@v3.0.1':
-        ref: 'v3.0.1'
-        commit: 'sha1-aa5489c8933f4cc7a4f7d45035b3b1440c9c10db'
-        owner_id: 71461757
-        repo_id: 219865964
     'hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e':
-        ref: 'v4.0.1'
-        commit: 'sha1-dfe3c3f87815947d99a8997f908cb6525fc44e9e'
-        owner_id: 761456
-        repo_id: 258271226
-    'hashicorp/setup-terraform@v4.0.1':
         ref: 'v4.0.1'
         commit: 'sha1-dfe3c3f87815947d99a8997f908cb6525fc44e9e'
         owner_id: 761456
