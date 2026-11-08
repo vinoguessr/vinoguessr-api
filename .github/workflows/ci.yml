@@ -26,8 +26,8 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: test-account-id
       CLOUDFLARE_API_TOKEN: test-api-token
       OTP_SECRET_KEY: 14nGf8gj0cPsgfZaoKKGBlmKz7kpcfgvYIGt0WH8BvE=
-      JWT_ISSUER: blindlog-api
-      JWT_AUDIENCE: blindlog-app
+      JWT_ISSUER: vinoguessr-api
+      JWT_AUDIENCE: vinoguessr-app
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

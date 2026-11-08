@@ -16,9 +16,9 @@ struct ObservabilityTests {
       providers: [
         InMemoryProvider(values: [
           "cloud.run.region": "asia-northeast1",
-          "k.configuration": "blindlog-api",
-          "k.revision": "blindlog-api-00001",
-          "k.service": "blindlog-api",
+          "k.configuration": "vinoguessr-api",
+          "k.revision": "vinoguessr-api-00001",
+          "k.service": "vinoguessr-api",
         ])
       ]
     )
@@ -26,15 +26,15 @@ struct ObservabilityTests {
     let first = makeOTelConfiguration(arguments: arguments, config: config)
     let second = makeOTelConfiguration(arguments: arguments, config: config)
 
-    #expect(first.serviceName == "blindlog-api")
-    #expect(second.serviceName == "blindlog-api")
+    #expect(first.serviceName == "vinoguessr-api")
+    #expect(second.serviceName == "vinoguessr-api")
     #expect(first.logs.otlpExporter.endpoint == "http://localhost:4318")
     #expect(first.logs.otlpExporter.protocol == .httpProtobuf)
     #expect(first.metrics.otlpExporter.protocol == .httpProtobuf)
     #expect(first.traces.otlpExporter.protocol == .httpProtobuf)
     #expect(first.resourceAttributes["deployment.environment.name"] == "production")
-    #expect(first.resourceAttributes["service.version"] == "blindlog-api-00001")
-    #expect(first.resourceAttributes["gcp.cloud_run.revision"] == "blindlog-api-00001")
+    #expect(first.resourceAttributes["service.version"] == "vinoguessr-api-00001")
+    #expect(first.resourceAttributes["gcp.cloud_run.revision"] == "vinoguessr-api-00001")
     #expect(first.resourceAttributes["cloud.region"] == "asia-northeast1")
   }
 

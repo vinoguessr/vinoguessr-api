@@ -96,7 +96,7 @@ extension API {
 
     let emailMessage = EmailMessage(
       to: email,
-      from: "support@blindlog.me",
+      from: "support@vinoguessr.com",
       subject: "Confirm your email",
       text: otpPassword
     )

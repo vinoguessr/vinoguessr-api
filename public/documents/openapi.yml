@@ -1,10 +1,10 @@
 openapi: '3.1.0'
 info:
-  title: Blindlog API server
+  title: VinoGuessr API server
   version: 1.0.0
 servers:
-  - url: https://api.blindlog.me
-    description: Blindlog API server
+  - url: https://api.vinoguessr.com
+    description: VinoGuessr API server
 tags:
   - name: System
     description: Health checks and platform integration documents.

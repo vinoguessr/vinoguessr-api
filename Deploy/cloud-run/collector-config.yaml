@@ -41,7 +41,7 @@ processors:
 exporters:
   googlecloud:
     log:
-      default_log_name: blindlog-api
+      default_log_name: vinoguessr-api
   googlemanagedprometheus:
 
 extensions:

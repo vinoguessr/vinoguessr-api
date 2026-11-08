@@ -69,7 +69,7 @@ func buildApplication(
     return service
   }
 
-  var logger = Logger(label: "Blindlog")
+  var logger = Logger(label: "VinoGuessr")
   logger.logLevel = logLevel
 
   let cache = try makeCache(
