@@ -1,6 +1,6 @@
 services:
   valkey:
-    image: valkey/valkey:9.1.2
+    image: valkey/valkey:9.1.3
     restart: always
 
   postgres:
@@ -16,13 +16,13 @@ services:
       - ./Database/migrations/20260531060000_seed_wine_master_data.sql:/docker-entrypoint-initdb.d/003_seed_wine_master_data.sql:ro
 
   otel-collector:
-    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.164.0
+    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.165.0
     command: ["--config=/etc/otelcol-contrib/config.yaml"]
     volumes:
       - ./Deploy/local/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
 
   swift:
-    image: swift:6.4.1-noble
+    image: swift:6.4.2-noble
     depends_on:
       - postgres
       - valkey
