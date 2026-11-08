@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     container: swift:6.4.0-noble
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: swift format lint -r -p -s .
   test:
     runs-on: ubuntu-latest
@@ -30,11 +30,11 @@ jobs:
       JWT_AUDIENCE: blindlog-app
     steps:
       - name: Checkout
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Start DB, Cache & OTel Collector (wait for health)
         run: docker compose up -d --wait postgres valkey otel-collector
       - name: Cache SwiftPM build artifacts
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .build
           key: ${{ runner.os }}-swift-6.4.0-${{ hashFiles('Package.swift', 'Package.resolved') }}
@@ -47,10 +47,10 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: docker/setup-buildx-action@v4.4.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build image
-        uses: docker/build-push-action@v7.4.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           push: false
@@ -59,8 +59,8 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: hashicorp/setup-terraform@v4.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: ~1.14
       - run: terraform -chdir=Terraform fmt -check -diff
