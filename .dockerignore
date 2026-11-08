@@ -10,14 +10,6 @@ xcuserdata
 .env.*
 DerivedData
 
-# Terraform local state/config
-**/.terraform
-**/.terraform/**
-**/terraform.tfvars
-**/*.tfvars
-**/*.tfstate
-**/*.tfstate.*
-
 # Local tooling and editor state
 .agents
 .claude
