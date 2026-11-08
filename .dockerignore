@@ -11,6 +11,7 @@ xcuserdata
 DerivedData
 
 # Secrets that may sit in a local checkout; `COPY . .` must never put them in an image.
+**/.terraform
 **/*.tfvars
 **/*.tfstate
 **/*.tfstate.*
