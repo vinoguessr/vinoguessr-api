@@ -5,6 +5,7 @@
 
 - https://api.vinoguessr.com/
 - Documents https://api.vinoguessr.com/documents
+- Infrastructure (Terraform, Cloud Run, load balancer, DNS) lives in [vinoguessr-infrastructure](https://github.com/vinoguessr/vinoguessr-infrastructure). This repository builds the image, applies migrations, and rolls it out with the Deploy workflow.
 
 ## Development Policy
 

@@ -10,13 +10,15 @@ xcuserdata
 .env.*
 DerivedData
 
-# Terraform local state/config
+# Secrets that may sit in a local checkout; `COPY . .` must never put them in an image.
 **/.terraform
-**/.terraform/**
-**/terraform.tfvars
 **/*.tfvars
 **/*.tfstate
 **/*.tfstate.*
+**/*.p8
+**/*.p12
+**/*.key
+**/*.pem
 
 # Local tooling and editor state
 .agents

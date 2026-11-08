@@ -10,12 +10,6 @@ xcuserdata/
 .env
 DerivedData
 
-# Terraform
-**/.terraform/
-**/terraform.tfvars
-**/*.tfstate
-**/*.tfstate.*
-
 ## AI Agents
 .agents
 .claude/*
