@@ -18,10 +18,29 @@ DerivedData
 
 ## AI Agents
 .agents
-.claude
+.claude/*
+!.claude/agents/
 
 ## Xcode Temporary File
 .derived-data-log-*
 
 ## Postgres Temporary File
 dump.rdb
+
+# VinoGuessr foundation baseline (vinoguessr/.github)
+__pycache__/
+!.env.example
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserstate
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+*.p12
+*.p8
+*.key
+*.pem
