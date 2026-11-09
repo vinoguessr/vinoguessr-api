@@ -8,6 +8,7 @@ on:
       - "Database/migrations/**"
       - "atlas.hcl"
       - ".github/workflows/atlas.yml"
+      - ".github/actions/install-atlas/**"
 
 permissions:
   contents: read
@@ -32,12 +33,12 @@ jobs:
     env:
       ATLAS_DEV_DATABASE_URL: postgres://postgres:postgres@localhost:5432/dev?sslmode=disable&search_path=public
     steps:
-      - name: Install Atlas Community
-        run: curl -sSf https://atlasgo.sh | sh -s -- --community
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Install Atlas Community
+        uses: ./.github/actions/install-atlas
 
       - name: Prepare Atlas dev database
         run: psql "postgres://postgres:postgres@localhost:5432/dev?sslmode=disable" -f Database/extensions.sql

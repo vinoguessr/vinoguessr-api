@@ -1,0 +1,36 @@
+name: Install Atlas Community
+description: Installs a pinned Atlas Community release for linux-amd64 after checking its SHA-256.
+
+# Not `curl https://atlasgo.sh | sh` and not ariga/setup-atlas, which runs that same script:
+# both run whatever installer and binary the server serves at run time, and check the binary
+# only against a checksum served next to it. Pinning the version and its checksum here means a
+# compromised server cannot change what runs. Dependabot cannot track this download; see
+# "Updating Atlas" in the README.
+runs:
+  using: composite
+  steps:
+    - name: Install Atlas Community
+      shell: bash
+      env:
+        ATLAS_VERSION: v1.3.6
+        ATLAS_SHA256: bb6e81678b18335c911717e62677c742f8328737533825b9af57a2917a649b56
+        ATLAS_RELEASED: "2026-10-27"
+      run: |
+        if [ "$RUNNER_OS" != Linux ] || [ "$RUNNER_ARCH" != X64 ]; then
+          echo "::error::The pinned Atlas checksum is for linux-amd64, not $RUNNER_OS $RUNNER_ARCH"
+          exit 1
+        fi
+        # Ariga removes releases from its CDN six months after publishing them; warn a month ahead.
+        released="$(date -u -d "$ATLAS_RELEASED" +%s)"
+        age_days=$(( ($(date -u +%s) - released) / 86400 ))
+        if [ "$age_days" -gt 150 ]; then
+          echo "::warning::Atlas $ATLAS_VERSION was released $age_days days ago, and Ariga removes releases from its CDN after six months. Update it (README, Updating Atlas)."
+        fi
+        dir="$RUNNER_TEMP/atlas"
+        mkdir -p "$dir"
+        curl --fail --silent --show-error --location --proto '=https' --retry 3 \
+          --output "$dir/atlas" "https://atlasbinaries.com/atlas/atlas-community-linux-amd64-$ATLAS_VERSION"
+        echo "$ATLAS_SHA256  $dir/atlas" | sha256sum --check --strict
+        chmod +x "$dir/atlas"
+        echo "$dir" >> "$GITHUB_PATH"
+        "$dir/atlas" version

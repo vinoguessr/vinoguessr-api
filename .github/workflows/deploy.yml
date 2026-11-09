@@ -83,7 +83,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Install Atlas Community
-        run: curl -sSf https://atlasgo.sh | sh -s -- --community
+        uses: ./.github/actions/install-atlas
 
       # Migrate with the POSTGRES_PASSWORD version the service pins, not `latest`: between adding
       # a version and Terraform pinning it, or after a pin is rolled back, `latest` is a password
