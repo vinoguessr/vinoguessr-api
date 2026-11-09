@@ -122,7 +122,7 @@ func buildApplication(
   router.add(middleware: ErrorLoggingMiddleware())
   router.add(middleware: MetricsMiddleware())
   router.add(middleware: LogRequestsMiddleware(.info))
-  router.add(middleware: FileMiddleware(searchForIndexHtml: true))
+  addStaticFileMiddleware(to: router, env: arguments.env)
 
   let apiRouter =
     router
@@ -157,6 +157,23 @@ func buildApplication(
   )
 
   return app
+}
+
+func addStaticFileMiddleware(
+  to router: Router<AppRequestContext>,
+  env: EnvironmentLevel
+) {
+  router.add(middleware: FileMiddleware("public", searchForIndexHtml: true))
+
+  switch env {
+  case .develop:
+    router.add(middleware: FileMiddleware("playground", searchForIndexHtml: true))
+  case .production:
+    // The playground runs passkey ceremonies with its own origin, but production only accepts
+    // https://vinoguessr.com (ADR-0005), so on api.vinoguessr.com it would be a sign-in page
+    // that can never succeed.
+    break
+  }
 }
 
 func makeRateLimitConfig(

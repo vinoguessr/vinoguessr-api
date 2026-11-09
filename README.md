@@ -88,6 +88,16 @@ container run --rm \
   ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.144.0
 ```
 
+## Passkey Playground
+
+`playground/` is a browser page for trying passkey registration, sign-in, and the other API
+flows against a local server. Only `--env develop` (the default for `swift run App`) serves it,
+at http://localhost:8080/ with `RELYING_PARTY_ID=localhost` and
+`RELYING_PARTY_ORIGIN=http://localhost:8080`. The container image runs `--env production`, which
+serves only `public/` (the OpenAPI documents at `/documents`): production's relying party is
+`vinoguessr.com`, so a page on the API host could never complete a passkey ceremony
+([ADR-0005](https://github.com/vinoguessr/vinoguessr-docs/blob/main/docs/adr/0005-passkey-relying-party-id.md)).
+
 <!-- vinoguessr-foundation -->
 ## Scope
 
