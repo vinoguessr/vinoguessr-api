@@ -19,6 +19,9 @@ DerivedData
 **/*.p12
 **/*.key
 **/*.pem
+# Credentials file google-github-actions/auth writes into the workspace (see its README).
+gha-creds-*.json
+**/gha-creds-*.json
 
 # Local tooling and editor state
 .agents
