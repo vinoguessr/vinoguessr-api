@@ -5,8 +5,16 @@ on:
     branches: [main]
   schedule:
     - cron: "0 21 * * *"
-  # Manual redeploys (first image of a new project, applying a rotated secret).
+  # Manual runs redeploy main (for example after Deploy was paused) or, with `bootstrap`, push
+  # the first image of a new project before Terraform creates the service. They never roll out a
+  # rotated secret: Terraform pins each secret version in the service, and this workflow only
+  # changes the image.
   workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: "The Cloud Run service does not exist yet: migrate with the newest POSTGRES_PASSWORD version"
+        type: boolean
+        default: false
 
 # Serialize prod deploys but never cancel an in-flight one — overwriting an
 # image mid-rollout produces unpredictable revisions. The group is per ref, so a
@@ -77,7 +85,47 @@ jobs:
       - name: Install Atlas Community
         run: curl -sSf https://atlasgo.sh | sh -s -- --community
 
+      # Migrate with the POSTGRES_PASSWORD version the service pins, not `latest`: between adding
+      # a version and Terraform pinning it, or after a pin is rolled back, `latest` is a password
+      # the service does not use. Read the template, not the serving revision: the update below
+      # creates its revision from the template. The deployer's Cloud Run role is bound on the
+      # service itself, so a missing service returns PERMISSION_DENIED just like an existing one
+      # it cannot read; only the operator can tell, so `latest` needs the `bootstrap` input.
+      # Terraform pins version numbers only, so anything else (such as `latest`) is drift.
+      - name: Resolve the POSTGRES_PASSWORD version the service pins
+        id: postgres-password
+        env:
+          BOOTSTRAP: ${{ inputs.bootstrap }}
+        run: |
+          errors="$RUNNER_TEMP/describe-service.log"
+          if service="$(gcloud run services describe "$SERVICE" --region="$REGION" --project="$PROJECT_ID" --format=json 2>"$errors")"; then
+            reference="$(jq -c '[.spec.template.spec.containers[]? | select(.name == "app") | .env[]? | select(.name == "POSTGRES_PASSWORD") | .valueFrom.secretKeyRef]' <<<"$service")"
+            version="$(jq -r 'if length == 1 and .[0].name == "POSTGRES_PASSWORD" then .[0].key // "" else "" end' <<<"$reference")"
+            if ! [[ "$version" =~ ^[1-9][0-9]*$ ]]; then
+              echo "::error::$SERVICE exists, but its app container does not read POSTGRES_PASSWORD from a version number of the POSTGRES_PASSWORD secret (found secretKeyRef: $reference)"
+              exit 1
+            fi
+            if [ "$BOOTSTRAP" = true ]; then
+              echo "::warning::$SERVICE exists, so the bootstrap input is ignored"
+            fi
+            echo "Migrating with POSTGRES_PASSWORD version $version, which $SERVICE pins."
+          elif [ "$BOOTSTRAP" = true ] && grep -q -F \
+            -e "Permission 'run.services.get' denied on resource 'namespaces/$PROJECT_ID/services/$SERVICE'" \
+            -e "Cannot find service [$SERVICE]" "$errors"; then
+            cat "$errors" >&2
+            version=latest
+            echo "bootstrap=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Bootstrap run and $SERVICE cannot be found: migrating with the newest POSTGRES_PASSWORD version (latest) and skipping the image update"
+          else
+            cat "$errors" >&2
+            echo "::error::Cannot read which POSTGRES_PASSWORD version $SERVICE pins. If the service does not exist yet, run this workflow with the bootstrap input."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Apply database migrations
+        env:
+          POSTGRES_PASSWORD_VERSION: ${{ steps.postgres-password.outputs.version }}
         run: |
           for name in POSTGRES_HOSTNAME POSTGRES_USER POSTGRES_DB; do
             if [ -z "${!name}" ]; then
@@ -86,7 +134,7 @@ jobs:
             fi
           done
 
-          POSTGRES_PASSWORD="$(gcloud secrets versions access latest --secret=POSTGRES_PASSWORD --project="$PROJECT_ID")"
+          POSTGRES_PASSWORD="$(gcloud secrets versions access "${POSTGRES_PASSWORD_VERSION:?}" --secret=POSTGRES_PASSWORD --project="$PROJECT_ID")"
           echo "::add-mask::$POSTGRES_PASSWORD"
           POSTGRES_USER_ENCODED="$(jq -rn --arg value "$POSTGRES_USER" '$value|@uri')"
           POSTGRES_PASSWORD_ENCODED="$(jq -rn --arg value "$POSTGRES_PASSWORD" '$value|@uri')"
@@ -102,7 +150,10 @@ jobs:
             --var "database_url=postgres://${POSTGRES_USER_ENCODED}:${POSTGRES_PASSWORD_ENCODED}@${POSTGRES_HOSTNAME}:5432/${POSTGRES_DB_ENCODED}?sslmode=require&search_path=public" \
             "${baseline_args[@]}"
 
+      # A bootstrap run stops after migrating: the service does not exist yet, and Terraform
+      # creates it from this image.
       - name: Update Cloud Run service image
+        if: steps.postgres-password.outputs.bootstrap != 'true'
         run: |
           gcloud run services update "$SERVICE" \
             --project="$PROJECT_ID" \

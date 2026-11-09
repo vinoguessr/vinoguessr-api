@@ -46,7 +46,12 @@ The Atlas workflow starts a PostgreSQL service in GitHub Actions, installs
 required extensions, and passes its URL to Atlas via `dev_url`. Production
 migration apply needs `POSTGRES_HOSTNAME`, `POSTGRES_USER`, and `POSTGRES_DB`
 GitHub repository variables, and reads `POSTGRES_PASSWORD` from Google Secret
-Manager.
+Manager at the version the Cloud Run service pins, so migrations and the service
+use the same password. The first deploy to a new project runs before the
+service exists: run it by hand with the `bootstrap` input, which migrates with
+the newest version instead and skips the image update, because Terraform
+creates the service. Without that input, a deploy that cannot read the service
+fails before migrating.
 
 When adopting Atlas for an existing production database that already contains
 the baseline schema, set `ATLAS_BASELINE_VERSION=000001` for the first deploy.
