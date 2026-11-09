@@ -6,13 +6,18 @@ on:
       - "*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   release:
     runs-on: ubuntu-slim
+    permissions:
+      contents: write   # gh release create
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: gh release create ${{ github.ref_name }} --generate-notes
+        with:
+          persist-credentials: false
+      - run: gh release create "$TAG" --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
