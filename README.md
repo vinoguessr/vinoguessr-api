@@ -37,7 +37,8 @@ workflow. On deployment, the deploy workflow applies committed SQL migrations
 with Atlas before updating the Cloud Run service image. The application does
 not apply SQL migrations at startup; database initialization is owned by Atlas
 and the local Postgres init scripts. CI and deploy install the Atlas Community
-Edition.
+Edition with `.github/actions/install-atlas`, which pins one release and its
+SHA-256 (see [Updating Atlas](#updating-atlas)).
 
 This project uses forward-only migrations. Down migrations are not generated.
 If a migration must be corrected, add a new forward migration.
@@ -58,6 +59,35 @@ the baseline schema, set `ATLAS_BASELINE_VERSION=000001` for the first deploy.
 Atlas then records `000001_initial_schema.sql` as already applied and runs only
 future migrations. For a new empty database, leave `ATLAS_BASELINE_VERSION`
 unset so Atlas applies the baseline SQL normally.
+
+### Updating Atlas
+
+`.github/actions/install-atlas` downloads the linux-amd64 Atlas Community
+binary from Ariga's CDN and checks it against the SHA-256 stored next to the
+version. Dependabot cannot track this download, so update it by hand, before
+the pinned release is six months old: Ariga removes binaries published more
+than six months ago from the CDN, after which the install step fails before any
+migration runs. The action warns once the release in `ATLAS_RELEASED` is 150
+days old.
+
+1. Pick the newest `X.Y.Z-community` tag of
+   [`arigaio/atlas`](https://hub.docker.com/r/arigaio/atlas/tags?name=community)
+   that is at least 7 days old, matching the Dependabot cooldown. Ariga
+   publishes patch releases there and on the CDN, not as GitHub releases. Never
+   use `latest`: on the CDN it is a canary build.
+2. Download `https://atlasbinaries.com/atlas/atlas-community-linux-amd64-vX.Y.Z`
+   and check that its SHA-256 matches both the `.sha256` file at the same URL
+   and `/atlas` in the image, so the pin does not rest on one server:
+
+   ```sh
+   id="$(docker create --platform linux/amd64 arigaio/atlas:X.Y.Z-community)"
+   docker cp "$id:/atlas" - | tar -xO | sha256sum
+   docker rm "$id"
+   ```
+
+3. Set `ATLAS_VERSION`, `ATLAS_SHA256`, and `ATLAS_RELEASED` (the day the tag
+   was published) in the action together. The Atlas workflow runs on the pull
+   request and installs the new version.
 
 ## Run on Local
 
