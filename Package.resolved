@@ -1,5 +1,5 @@
 {
-  "originHash" : "f276abb4fe0b88a4b6caef2fd3a4d2737eff28fbcb1bf233d2204de5f759d559",
+  "originHash" : "db40777722706317e1b2159ea8c303a212d960fcec4287f109b46ee5e6290e67",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -296,6 +296,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "8fa3d2d73500751d7607b9e34f013e8377299d02"
+      }
+    },
+    {
+      "identity" : "swift-cbor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/brokenhandsio/swift-cbor.git",
+      "state" : {
+        "revision" : "6ee2fa73aa6470fd1b6364757b88fdb2602ca4f5",
+        "version" : "0.3.0"
       }
     },
     {
@@ -1120,10 +1129,9 @@
     {
       "identity" : "swift-webauthn",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zunda-pixel/swift-webauthn.git",
+      "location" : "https://github.com/brokenhandsio/swift-webauthn.git",
       "state" : {
-        "branch" : "add-init",
-        "revision" : "1781923545d83304905473944f95262bb5225c56"
+        "revision" : "38b75016ed3550c7b08b70af05538a807f507285"
       }
     },
     {
@@ -1133,15 +1141,6 @@
       "state" : {
         "branch" : "main",
         "revision" : "cd4a55d564186a2124d0aa5818fa31a550f6b373"
-      }
-    },
-    {
-      "identity" : "swiftcbor",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/unrelentingtech/SwiftCBOR.git",
-      "state" : {
-        "revision" : "fd929a6d8f7651ce0f63fc99397fd5762358cc29",
-        "version" : "0.6.0"
       }
     },
     {

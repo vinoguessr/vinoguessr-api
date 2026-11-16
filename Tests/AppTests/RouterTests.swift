@@ -1,9 +1,9 @@
+import CBOR
 import EmailService
 import Foundation
 import HummingbirdTesting
 import Logging
 import NIOCore
-@preconcurrency import SwiftCBOR
 import Testing
 
 @testable import App
@@ -1144,7 +1144,7 @@ struct RouterTests {
   @Test
   func passkeyRegistrationAndAuthenticationWithInjectedWebAuthn() async throws {
     let arguments = TestArguments()
-    let credentialID = "credential-1"
+    let credentialID = "credential-\(UUID().uuidString)"
     let webAuthn = TestWebAuthn(credentialID: credentialID)
     let app = try await buildApplication(
       arguments,
@@ -1234,7 +1234,7 @@ struct RouterTests {
   @Test
   func duplicatePasskeyRegistrationReturnsErrorCode() async throws {
     let arguments = TestArguments()
-    let credentialID = "credential-duplicate"
+    let credentialID = "credential-duplicate-\(UUID().uuidString)"
     let webAuthn = TestWebAuthn(credentialID: credentialID)
     let app = try await buildApplication(
       arguments,
@@ -1689,6 +1689,48 @@ private struct PasskeyAuthenticationFixture: Encodable {
     var clientDataJSON: String
     var authenticatorData: String
     var signature: String
+  }
+}
+
+struct WebAuthnMockTests {
+  @Test
+  func registrationAndAuthenticationResultsPreserveCredentialMetadata() async throws {
+    let credentialID = "mock-credential"
+    let webAuthn = TestWebAuthn(credentialID: credentialID)
+    let registration = try JSONDecoder().decode(
+      RegistrationCredential.self,
+      from: passkeyRegistrationBody(credentialID: credentialID, challenge: "unused")
+    )
+    let registered = try await webAuthn.finishRegistration(
+      challenge: webAuthn.registrationChallenge,
+      credentialCreationData: registration,
+      requireUserVerification: false,
+      supportedPublicKeyAlgorithms: .supported,
+      pemRootCertificatesByFormat: [:],
+      confirmCredentialIDNotRegisteredYet: { $0 == credentialIDBase64URL(credentialID) }
+    )
+    #expect(registered.id == credentialIDBase64URL(credentialID))
+    #expect(registered.publicKey == Array("test-public-key".utf8))
+    #expect(registered.signCount == 1)
+    #expect(!registered.backupEligible)
+    #expect(!registered.isBackedUp)
+    #expect(registered.attestationObject.attestationStatement == CBOR.map([:]))
+
+    let authentication = try JSONDecoder().decode(
+      AuthenticationCredential.self,
+      from: passkeyAuthenticationBody(credentialID: credentialID, challenge: "unused")
+    )
+    let authenticated = try webAuthn.finishAuthentication(
+      credential: authentication,
+      expectedChallenge: webAuthn.authenticationChallenge,
+      credentialPublicKey: registered.publicKey,
+      credentialCurrentSignCount: registered.signCount,
+      requireUserVerification: false
+    )
+    #expect(authenticated.credentialID.asString() == registered.id)
+    #expect(authenticated.newSignCount == 2)
+    #expect(authenticated.credentialDeviceType == .singleDevice)
+    #expect(!authenticated.credentialBackedUp)
   }
 }
 

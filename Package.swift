@@ -12,6 +12,7 @@ let package = Package(
     )
   ],
   dependencies: [
+    .package(url: "https://github.com/brokenhandsio/swift-cbor.git", exact: "0.3.0"),
     .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
     .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
     .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0"),
@@ -30,7 +31,9 @@ let package = Package(
     ),
     .package(url: "https://github.com/swift-compositions/swift-sql.git", branch: "main"),
     .package(url: "https://github.com/zunda-pixel/swift-currency.git", from: "0.0.1"),
-    .package(url: "https://github.com/zunda-pixel/swift-webauthn.git", branch: "add-init"),
+    .package(
+      url: "https://github.com/brokenhandsio/swift-webauthn.git",
+      revision: "38b75016ed3550c7b08b70af05538a807f507285"),
     .package(url: "https://github.com/zunda-pixel/UUIDV7.git", branch: "replace-to-swift-testing"),
   ],
   targets: [
@@ -74,6 +77,7 @@ let package = Package(
       name: "AppTests",
       dependencies: [
         .target(name: "App"),
+        .product(name: "CBOR", package: "swift-cbor"),
         .product(name: "HummingbirdTesting", package: "hummingbird"),
         .product(name: "OTel", package: "swift-otel"),
       ]
