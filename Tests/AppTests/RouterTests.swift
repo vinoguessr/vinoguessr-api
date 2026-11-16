@@ -1,4 +1,3 @@
-import CBOR
 import EmailService
 import Foundation
 import HummingbirdTesting
@@ -1714,7 +1713,7 @@ struct WebAuthnMockTests {
     #expect(registered.signCount == 1)
     #expect(!registered.backupEligible)
     #expect(!registered.isBackedUp)
-    #expect(registered.attestationObject.attestationStatement == CBOR.map([:]))
+    #expect(registered.attestationObject.attestationStatement == .map([:]))
 
     let authentication = try JSONDecoder().decode(
       AuthenticationCredential.self,
