@@ -21,7 +21,7 @@ RUN swift sdk install \
 # Set up a build area
 WORKDIR /build
 
-# Preserve the lock: the legacy beta-2 tag sorts above beta.3 (Issue #382).
+# Preserve the reviewed dependency revisions for reproducible image builds.
 # First just resolve dependencies.
 # This creates a cached layer that can be reused
 # as long as your Package.swift/Package.resolved
