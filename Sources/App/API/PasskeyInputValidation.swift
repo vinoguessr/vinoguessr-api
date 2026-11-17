@@ -7,6 +7,23 @@ enum PasskeyInputError: Error {
 }
 
 enum PasskeyInputValidation {
+  static func userHandle(_ handle: [UInt8]?, belongsTo owner: UUID) -> Bool {
+    guard let handle else { return false }
+    switch handle.count {
+    case 16:
+      let uuid = owner.uuid
+      return handle == [
+        uuid.0, uuid.1, uuid.2, uuid.3, uuid.4, uuid.5, uuid.6, uuid.7,
+        uuid.8, uuid.9, uuid.10, uuid.11, uuid.12, uuid.13, uuid.14, uuid.15,
+      ]
+    case 36:
+      guard let text = String(bytes: handle, encoding: .utf8) else { return false }
+      return UUID(uuidString: text) == owner
+    default:
+      return false
+    }
+  }
+
   static func registration(_ credential: RegistrationCredential) throws {
     try identity(credential.id, rawID: credential.rawID)
     try client(credential.attestationResponse.clientDataJSON)

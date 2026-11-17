@@ -110,8 +110,9 @@ extension API {
     }
 
     let userID = passkeyCredential.userID
-    // The challenge has no user binding; the handle supplies the registration user.id.
-    guard credential.response.userHandle == Array(userID.uuidString.utf8) else {
+    // The userless challenge needs the registration handle to identify the stored key's owner.
+    guard PasskeyInputValidation.userHandle(credential.response.userHandle, belongsTo: userID)
+    else {
       return .badRequest
     }
 

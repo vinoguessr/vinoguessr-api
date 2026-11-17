@@ -9,6 +9,14 @@ import WebAuthn
 private let signedChallenge = Array(repeating: UInt8(0x51), count: 32)
 private let signedOrigin = "http://localhost:8080"
 
+func syntheticBinaryUserHandle(_ owner: UUID) throws -> Data {
+  let hex = Array(owner.uuidString.replacing("-", with: "").utf8)
+  return try Data(
+    stride(from: 0, to: hex.count, by: 2).map { index in
+      try #require(UInt8(String(decoding: hex[index..<(index + 2)], as: UTF8.self), radix: 16))
+    })
+}
+
 struct SyntheticPasskey {
   private let key = P256.Signing.PrivateKey()
   let id = Array(UUID().uuidString.utf8)
@@ -102,6 +110,25 @@ struct SyntheticPasskey {
 }
 
 struct LiveWebAuthnTests {
+  @Test func bindsExistingUUIDHandleFormatsToTheCredentialOwner() throws {
+    let owner = try #require(UUID(uuidString: "00112233-4455-6677-8899-AABBCCDDEEFF"))
+    let native: [UInt8] = [
+      0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+      0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
+    ]
+    #expect(PasskeyInputValidation.userHandle(native, belongsTo: owner))
+    #expect(PasskeyInputValidation.userHandle(Array(owner.uuidString.utf8), belongsTo: owner))
+    #expect(
+      PasskeyInputValidation.userHandle(Array(owner.uuidString.lowercased().utf8), belongsTo: owner)
+    )
+    let invalid: [[UInt8]?] = [
+      nil, [], Array(repeating: 0xff, count: 16),
+      Array(UUID().uuidString.utf8), Array(repeating: 0xff, count: 36),
+      Array(repeating: 0, count: 15), Array(repeating: 0x30, count: 36),
+    ]
+    for handle in invalid { #expect(!PasskeyInputValidation.userHandle(handle, belongsTo: owner)) }
+  }
+
   private var verifier: LiveWebAuthn {
     .init(
       manager: WebAuthnManager(

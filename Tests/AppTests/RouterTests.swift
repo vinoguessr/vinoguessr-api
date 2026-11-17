@@ -1234,36 +1234,48 @@ struct RouterTests {
             counter: counter, clientData: clientData,
             tamper: tamper, userHandle: handle), challenge: challenge)
       }
-      let handle = Data(owner.userID.utf8)
-      let firstChallenge = try await challenge()
-      let first = try await client.execute(
-        uri: "/token/passkey", method: .post,
-        headers: [.cfConnectingIP: ipAddress],
-        body: ByteBuffer(data: assertionBody(firstChallenge, counter: 1, handle: handle)))
-      try #require(first.status == .ok)
-      let authenticated = try JSONDecoder().decode(
-        Components.Schemas.UserToken.self, from: first.body)
-      #expect(authenticated.userID == owner.userID)
+      let ownerID = try #require(UUID(uuidString: owner.userID))
+      let handle = try syntheticBinaryUserHandle(ownerID)
+      for (index, legitimateHandle) in [
+        handle, Data(owner.userID.utf8), Data(owner.userID.lowercased().utf8),
+      ].enumerated() {
+        let firstChallenge = try await challenge()
+        let first = try await client.execute(
+          uri: "/token/passkey", method: .post,
+          headers: [.cfConnectingIP: ipAddress],
+          body: ByteBuffer(
+            data: assertionBody(
+              firstChallenge, counter: UInt32(index + 1), handle: legitimateHandle)))
+        try #require(first.status == .ok)
+        let authenticated = try JSONDecoder().decode(
+          Components.Schemas.UserToken.self, from: first.body)
+        #expect(authenticated.userID == owner.userID)
+      }
 
       let failedChallenge = try await challenge()
       let tampered = try await client.execute(
         uri: "/token/passkey", method: .post,
         headers: [.cfConnectingIP: ipAddress],
         body: ByteBuffer(
-          data: assertionBody(failedChallenge, counter: 2, handle: handle, tamper: true)))
+          data: assertionBody(failedChallenge, counter: 4, handle: handle, tamper: true)))
       #expect(tampered.status == .badRequest)
       let replay = try await client.execute(
         uri: "/token/passkey", method: .post,
         headers: [.cfConnectingIP: ipAddress],
-        body: ByteBuffer(data: assertionBody(failedChallenge, counter: 2, handle: handle)))
+        body: ByteBuffer(data: assertionBody(failedChallenge, counter: 4, handle: handle)))
       #expect(replay.status == .badRequest)
-      for (index, invalidHandle) in [nil, Data(), Data(UUID().uuidString.utf8)].enumerated() {
+      let otherOwner = UUID()
+      let invalidHandles: [Data?] = [
+        nil, Data(), try syntheticBinaryUserHandle(otherOwner), Data(otherOwner.uuidString.utf8),
+        Data(repeating: 0xff, count: 36),
+      ]
+      for (index, invalidHandle) in invalidHandles.enumerated() {
         let next = try await challenge()
         let rejected = try await client.execute(
           uri: "/token/passkey", method: .post,
           headers: [.cfConnectingIP: ipAddress],
           body: ByteBuffer(
-            data: assertionBody(next, counter: UInt32(index + 2), handle: invalidHandle)))
+            data: assertionBody(next, counter: UInt32(index + 4), handle: invalidHandle)))
         #expect(rejected.status == .badRequest, "Invalid handle case \(index)")
       }
     }
