@@ -58,7 +58,8 @@ struct LiveWebAuthn: WebAuthnProtocol {
     pemRootCertificatesByFormat: [AttestationFormat: [Data]],
     confirmCredentialIDNotRegisteredYet: @Sendable @concurrent (String) async throws -> Bool
   ) async throws -> Credential {
-    try await manager.finishRegistration(
+    try PasskeyInputValidation.registration(credentialCreationData)
+    return try await manager.finishRegistration(
       challenge: challenge,
       credentialCreationData: credentialCreationData,
       requireUserVerification: requireUserVerification,
@@ -87,7 +88,8 @@ struct LiveWebAuthn: WebAuthnProtocol {
     credentialCurrentSignCount: UInt32,
     requireUserVerification: Bool
   ) throws -> VerifiedAuthentication {
-    try manager.finishAuthentication(
+    try PasskeyInputValidation.authentication(credential, publicKey: credentialPublicKey)
+    return try manager.finishAuthentication(
       credential: credential,
       expectedChallenge: expectedChallenge,
       credentialPublicKey: credentialPublicKey,

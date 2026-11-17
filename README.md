@@ -133,6 +133,20 @@ serves only `public/` (the OpenAPI documents at `/documents`): production's rely
 `vinoguessr.com`, so a page on the API host could never complete a passkey ceremony
 ([ADR-0005](https://github.com/vinoguessr/vinoguessr-docs/blob/main/docs/adr/0005-passkey-relying-party-id.md)).
 
+## Passkey verification
+
+`LiveWebAuthnTests` generates private keys in memory, registers their public COSE keys through `LiveWebAuthn`, and verifies assertions signed by those keys. Registration uses `none` attestation, which contains no attestation signature. The pinned WebAuthn library does not support signed attestation verification. The tests also cover P384, valid authenticator extensions, backup flags, and zero signature counters.
+
+`PasskeyInputValidation` checks credential ID consistency, complete CBOR items with unique map keys, authenticator flags, and the original signed client JSON. Unknown client JSON fields remain supported and signed bytes are never reserialized before signature verification. Cross-origin ceremonies are not supported. CBOR remains a direct production dependency because the application now uses its decoder for these checks.
+
+`PasskeyRequestMiddleware` limits the registration and authentication request bodies to 256 KiB before generated JSON decoding. It counts actual streamed bytes, including requests without a declared length. Oversized requests return `413` with `payload_too_large`; malformed request JSON returns `400` with `invalid_request`. The limit does not apply to other API operations.
+
+Sign-in is usernameless: the API issues authentication options without `allowCredentials`. The assertion's required `userHandle` must match the credential owner's server-issued registration handle, the UTF-8 bytes of the account UUID string. This follows [WebAuthn section 7.2, step 6](https://www.w3.org/TR/webauthn-3/#sctn-verifying-assertion). Client requests that omit the handle are rejected. The HTTP test uses the default live verifier, fresh server challenges, PostgreSQL and Valkey, and covers registration, signed sign-in, signature rejection, consumed-challenge replay, and handle binding.
+
+The comparison with Sauna preserves VinoGuessr's existing supported algorithms and optional user-verification policy. The authenticator backup flags must be coherent, but VinoGuessr does not use backup state in business policy or store a backup-history invariant. No schema was added for it. See [WebAuthn section 7.2, steps 18 and 19](https://www.w3.org/TR/webauthn-3/#sctn-verifying-assertion).
+
+These tests use synthetic credentials. They do not verify browser UI, physical authenticators, certificate attestation, or client compatibility with the required handle. The existing manual Passkey test remains skipped. The middleware checks duplicate decoded property names in the original outer request JSON before OpenAPI conversion. The verifier separately checks the embedded signed `clientDataJSON`.
+
 <!-- vinoguessr-foundation -->
 ## Scope
 

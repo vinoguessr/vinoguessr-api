@@ -110,6 +110,10 @@ extension API {
     }
 
     let userID = passkeyCredential.userID
+    // The challenge has no user binding; the handle supplies the registration user.id.
+    guard credential.response.userHandle == Array(userID.uuidString.utf8) else {
+      return .badRequest
+    }
 
     // 4. Verify assertion with WebAuthn
     let verifiedAuthentication: VerifiedAuthentication

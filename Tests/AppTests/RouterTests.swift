@@ -1141,6 +1141,135 @@ struct RouterTests {
   }
 
   @Test
+  func passkeyEndpointsRejectMissingAndMalformedJSONAsClientErrors() async throws {
+    let app = try await buildApplication(TestArguments())
+    try await app.test(.router) { client in
+      for uri in ["/passkey", "/token/passkey"] {
+        let bodies: [ByteBuffer?] = [nil, ByteBuffer(string: "{")]
+        for body in bodies {
+          let response = try await client.execute(
+            uri: uri, method: .post,
+            headers: [.cfConnectingIP: UUID().uuidString, .contentType: "application/json"],
+            body: body)
+          #expect(response.status == .badRequest)
+          let error = try JSONDecoder().decode(
+            Components.Schemas.APIError.self, from: response.body)
+          #expect(error.error == "invalid_request")
+        }
+      }
+    }
+  }
+
+  @Test
+  func passkeyEndpointsRejectOversizedRawBodiesBeforeJSONDecoding() async throws {
+    let app = try await buildApplication(TestArguments())
+    try await app.test(.router) { client in
+      for uri in ["/passkey", "/token/passkey"] {
+        let response = try await client.execute(
+          uri: uri, method: .post,
+          headers: [.cfConnectingIP: UUID().uuidString, .contentType: "application/json"],
+          body: ByteBuffer(repeating: UInt8(0x20), count: 262_145))
+        #expect(response.status == .contentTooLarge)
+        let error = try JSONDecoder().decode(Components.Schemas.APIError.self, from: response.body)
+        #expect(error.error == "payload_too_large")
+      }
+    }
+  }
+
+  @Test
+  func generatedPasskeyCompletesLiveRegistrationAndSignedAuthentication() async throws {
+    let app = try await buildApplication(
+      TestArguments(), cloudflareImagesClient: TestCloudflareImagesClient())
+    let passkey = SyntheticPasskey()
+    let ipAddress = UUID().uuidString
+    try await app.test(.router) { client in
+      let created = try await client.execute(
+        uri: "/user", method: .post, headers: [.cfConnectingIP: ipAddress])
+      try #require(created.status == .ok)
+      let owner = try JSONDecoder().decode(Components.Schemas.UserToken.self, from: created.body)
+      let registrationOptions = try await client.execute(
+        uri: "/challenge/registration", method: .post,
+        headers: [.cfConnectingIP: ipAddress, .authorization: "Bearer \(owner.token)"])
+      try #require(registrationOptions.status == .ok)
+      let registrationChallenge = try JSONDecoder().decode(
+        String.self, from: registrationOptions.body)
+      let registrationClient = try passkey.client(
+        type: "webauthn.create",
+        challenge: #require(URLEncodedBase64(registrationChallenge).decodedBytes))
+      let registration = try passkey.registration(clientData: registrationClient)
+      let registrationBody = try signedPasskeyRequestBody(
+        registration, challenge: registrationChallenge)
+      let duplicatePrefix =
+        #"{"\u0069d": "#
+        + String(decoding: try JSONEncoder().encode(registration.id.asString()), as: UTF8.self)
+        + ","
+      let duplicateBody = Data(
+        (duplicatePrefix + String(decoding: registrationBody.dropFirst(), as: UTF8.self)).utf8)
+      let duplicate = try await client.execute(
+        uri: "/passkey", method: .post,
+        headers: [.cfConnectingIP: ipAddress, .authorization: "Bearer \(owner.token)"],
+        body: ByteBuffer(data: duplicateBody))
+      #expect(duplicate.status == .badRequest)
+      let added = try await client.execute(
+        uri: "/passkey", method: .post,
+        headers: [.cfConnectingIP: ipAddress, .authorization: "Bearer \(owner.token)"],
+        body: ByteBuffer(data: registrationBody))
+      try #require(added.status == .ok)
+
+      func challenge() async throws -> String {
+        let response = try await client.execute(
+          uri: "/challenge/authentication", method: .post,
+          headers: [.cfConnectingIP: ipAddress])
+        try #require(response.status == .ok)
+        return try JSONDecoder().decode(String.self, from: response.body)
+      }
+      func assertionBody(_ challenge: String, counter: UInt32, handle: Data?, tamper: Bool = false)
+        throws -> Data
+      {
+        let clientData = try passkey.client(
+          type: "webauthn.get",
+          challenge: #require(URLEncodedBase64(challenge).decodedBytes))
+        return try signedPasskeyRequestBody(
+          passkey.assertion(
+            counter: counter, clientData: clientData,
+            tamper: tamper, userHandle: handle), challenge: challenge)
+      }
+      let handle = Data(owner.userID.utf8)
+      let firstChallenge = try await challenge()
+      let first = try await client.execute(
+        uri: "/token/passkey", method: .post,
+        headers: [.cfConnectingIP: ipAddress],
+        body: ByteBuffer(data: assertionBody(firstChallenge, counter: 1, handle: handle)))
+      try #require(first.status == .ok)
+      let authenticated = try JSONDecoder().decode(
+        Components.Schemas.UserToken.self, from: first.body)
+      #expect(authenticated.userID == owner.userID)
+
+      let failedChallenge = try await challenge()
+      let tampered = try await client.execute(
+        uri: "/token/passkey", method: .post,
+        headers: [.cfConnectingIP: ipAddress],
+        body: ByteBuffer(
+          data: assertionBody(failedChallenge, counter: 2, handle: handle, tamper: true)))
+      #expect(tampered.status == .badRequest)
+      let replay = try await client.execute(
+        uri: "/token/passkey", method: .post,
+        headers: [.cfConnectingIP: ipAddress],
+        body: ByteBuffer(data: assertionBody(failedChallenge, counter: 2, handle: handle)))
+      #expect(replay.status == .badRequest)
+      for (index, invalidHandle) in [nil, Data(), Data(UUID().uuidString.utf8)].enumerated() {
+        let next = try await challenge()
+        let rejected = try await client.execute(
+          uri: "/token/passkey", method: .post,
+          headers: [.cfConnectingIP: ipAddress],
+          body: ByteBuffer(
+            data: assertionBody(next, counter: UInt32(index + 2), handle: invalidHandle)))
+        #expect(rejected.status == .badRequest, "Invalid handle case \(index)")
+      }
+    }
+  }
+
+  @Test
   func passkeyRegistrationAndAuthenticationWithInjectedWebAuthn() async throws {
     let arguments = TestArguments()
     let credentialID = "credential-\(UUID().uuidString)"
@@ -1217,7 +1346,8 @@ struct RouterTests {
         body: ByteBuffer(
           data: try passkeyAuthenticationBody(
             credentialID: credentialID,
-            challenge: authenticationChallenge
+            challenge: authenticationChallenge,
+            userHandle: Data(newUser.userID.utf8)
           ))
       )
 
@@ -1648,7 +1778,9 @@ private func passkeyRegistrationBody(credentialID: String, challenge: String) th
     ))
 }
 
-private func passkeyAuthenticationBody(credentialID: String, challenge: String) throws -> Data {
+private func passkeyAuthenticationBody(
+  credentialID: String, challenge: String, userHandle: Data? = nil
+) throws -> Data {
   let encodedCredentialID = credentialIDBase64URL(credentialID)
   return try JSONEncoder().encode(
     PasskeyAuthenticationFixture(
@@ -1659,7 +1791,8 @@ private func passkeyAuthenticationBody(credentialID: String, challenge: String) 
       response: .init(
         clientDataJSON: "e30",
         authenticatorData: "AA",
-        signature: "AA"
+        signature: "AA",
+        userHandle: userHandle?.base64URLEncodedString().asString()
       )
     ))
 }
@@ -1688,6 +1821,7 @@ private struct PasskeyAuthenticationFixture: Encodable {
     var clientDataJSON: String
     var authenticatorData: String
     var signature: String
+    var userHandle: String?
   }
 }
 
