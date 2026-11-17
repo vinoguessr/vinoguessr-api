@@ -141,7 +141,7 @@ func buildApplication(
     )
     .add(middleware: OpenAPIRequestContextMiddleware())
 
-  try api.registerHandlers(on: apiRouter)
+  try api.registerHandlers(on: apiRouter, middlewares: [PasskeyRequestMiddleware()])
 
   let app = Application(
     router: router,

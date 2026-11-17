@@ -110,6 +110,11 @@ extension API {
     }
 
     let userID = passkeyCredential.userID
+    // The userless challenge needs the registration handle to identify the stored key's owner.
+    guard PasskeyInputValidation.userHandle(credential.response.userHandle, belongsTo: userID)
+    else {
+      return .badRequest
+    }
 
     // 4. Verify assertion with WebAuthn
     let verifiedAuthentication: VerifiedAuthentication

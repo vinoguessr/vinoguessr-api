@@ -12,6 +12,8 @@ let package = Package(
     )
   ],
   dependencies: [
+    .package(url: "https://github.com/brokenhandsio/swift-cbor.git", exact: "0.3.0"),
+    .package(url: "https://github.com/apple/swift-crypto.git", "3.8.1"..<"6.0.0"),
     .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
     .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
     .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0"),
@@ -46,6 +48,7 @@ let package = Package(
         .product(name: "PostgresKit", package: "postgres-kit"),
         .product(name: "Valkey", package: "valkey-swift"),
         .product(name: "WebAuthn", package: "swift-webauthn"),
+        .product(name: "CBOR", package: "swift-cbor"),
         .product(name: "OpenAPIHummingbird", package: "swift-openapi-hummingbird"),
         .product(name: "JWTKit", package: "jwt-kit"),
         .product(name: "PostgreSQL", package: "swift-postgresql"),
@@ -76,6 +79,8 @@ let package = Package(
       name: "AppTests",
       dependencies: [
         .target(name: "App"),
+        .product(name: "CBOR", package: "swift-cbor"),
+        .product(name: "Crypto", package: "swift-crypto"),
         .product(name: "HummingbirdTesting", package: "hummingbird"),
         .product(name: "OTel", package: "swift-otel"),
       ]
