@@ -5,9 +5,7 @@ import ISO_9075_Foundation
 import Logging
 import OpenAPIRuntime
 import PostgreSQL
-import PostgresNIO
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 import UUIDV7
 import Valkey
@@ -107,7 +105,7 @@ extension API {
             try PasskeyCredential
               .where { $0.id.eq(credentialID) }
               .select { _ in 1 }
-              .fetchOne(db)
+              .fetch.one(db)
           }
 
           guard credential == nil else {

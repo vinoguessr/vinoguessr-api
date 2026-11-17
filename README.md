@@ -166,8 +166,8 @@ Follow [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md): satisfy th
 
 ## WebAuthn release resolution
 
-Package.swift declares the official upstream release with `from: "1.0.0-beta.3"`. Package.resolved records that version at `38b75016ed3550c7b08b70af05538a807f507285`, the same source used before the declaration change. Other dependency pins remain unchanged.
+Package.swift declares the official upstream release with `from: "1.0.0-beta.3"`. Package.resolved records that version at `38b75016ed3550c7b08b70af05538a807f507285`.
 
-Upstream removed the misordered `1.0.0-beta-2` tag on 2026-11-17 ([upstream Issue #135](https://github.com/brokenhandsio/swift-webauthn/issues/135)). A fresh, unqualified `swift package resolve` now selects `1.0.0-beta.3` at that revision with `brokenhandsio/swift-cbor` 0.3.0, without the legacy SwiftCBOR dependency. Resolving this repository also leaves its committed lock unchanged. The targeted `--version` regeneration workaround is no longer needed.
+Upstream removed the misordered `1.0.0-beta-2` tag on 2026-11-17 ([upstream Issue #135](https://github.com/brokenhandsio/swift-webauthn/issues/135)). A fresh, unqualified `swift package resolve` now selects `1.0.0-beta.3` at that revision with `brokenhandsio/swift-cbor` 0.3.0, without the legacy SwiftCBOR dependency. The targeted `--version` regeneration workaround is no longer needed.
 
-Keep the committed lock and use `--force-resolved-versions` for builds and tests, as CI and the image build do. The declaration and all dependency pins remain unchanged. This resolves only the release-resolution constraint previously recorded under [Issue #382](https://github.com/vinoguessr/vinoguessr-api/issues/382); the remaining passkey testing work in that Issue stays open.
+Keep the committed lock and use `--force-resolved-versions` for builds and tests, as CI and the image build do. This resolves only the release-resolution constraint previously recorded under [Issue #382](https://github.com/vinoguessr/vinoguessr-api/issues/382); the remaining passkey testing work in that Issue stays open.

@@ -1,3 +1,4 @@
+import Cardinal
 import Currency
 import Foundation
 import Hummingbird
@@ -5,7 +6,6 @@ import ISO_9075_Call_Level_Interface
 import ISO_9075_Foundation
 import Logging
 import PostgreSQL
-import PostgresNIO
 import SQL
 import SQL_Foundation_Integration
 import UUIDV7
@@ -800,7 +800,7 @@ extension API {
           try EventQuestionResponseRecord
           .where { $0.eventQuestionID.eq(questionID) }
           .order { ($0.createdAt, $0.id) }
-          .fetchAll(db)
+          .fetch.all(db)
         var out: [(EventQuestionResponseRecord, EventQuestionResponseRevisionRecord, [UUID])] = []
         for response in responses {
           guard let revision = try latestResponseRevision(responseID: response.id, db: db)
@@ -917,7 +917,7 @@ extension API {
         try EventParticipantRecord
           .where { $0.eventID.eq(eventID) }
           .order { ($0.createdAt, $0.id) }
-          .fetchAll(db)
+          .fetch.all(db)
       }
       return .ok(.init(body: .json(participants.map(Components.Schemas.EventParticipant.init))))
     } catch {
@@ -987,7 +987,7 @@ extension API {
     guard let userID = UserTokenContext.currentUserID else { return .unauthorized }
     do {
       let styles = try await database.read { (db) throws(ISO_9075.Error) in
-        try WineStyleRecord.order { $0.name }.fetchAll(db)
+        try WineStyleRecord.order { $0.name }.fetch.all(db)
       }
       return .ok(.init(body: .json(styles.map(Components.Schemas.WineStyle.init))))
     } catch {
@@ -1007,8 +1007,8 @@ extension API {
     guard let userID = UserTokenContext.currentUserID else { return .unauthorized }
     do {
       let varieties = try await database.read { (db) throws(ISO_9075.Error) in
-        let varieties = try WineVarietyRecord.order { $0.name }.fetchAll(db)
-        let styleLinks = try WineVarietyStyleRecord.fetchAll(db)
+        let varieties = try WineVarietyRecord.order { $0.name }.fetch.all(db)
+        let styleLinks = try WineVarietyStyleRecord.fetch.all(db)
         let styleIDsByVarietyID = Dictionary(grouping: styleLinks, by: \.wineVarietyID)
           .mapValues { links in
             links.map(\.wineStyleID).sorted { $0.uuidString < $1.uuidString }
@@ -1043,7 +1043,7 @@ extension API {
     guard let userID = UserTokenContext.currentUserID else { return .unauthorized }
     do {
       let types = try await database.read { (db) throws(ISO_9075.Error) in
-        try WineRegionTypeRecord.order { $0.name }.fetchAll(db)
+        try WineRegionTypeRecord.order { $0.name }.fetch.all(db)
       }
       return .ok(.init(body: .json(types.map(Components.Schemas.WineRegionType.init))))
     } catch {
@@ -1063,7 +1063,7 @@ extension API {
     guard let userID = UserTokenContext.currentUserID else { return .unauthorized }
     do {
       let regions = try await database.read { (db) throws(ISO_9075.Error) in
-        try WineRegionRecord.order { $0.name }.fetchAll(db)
+        try WineRegionRecord.order { $0.name }.fetch.all(db)
       }
       return .ok(.init(body: .json(regions.map(Components.Schemas.WineRegion.init))))
     } catch {
@@ -1215,7 +1215,7 @@ extension API {
           (revision.startsAt.desc(), event.id.desc())
         }
         .selectStar()
-        .fetchAll(db)
+        .fetch.all(db)
       return try snapshots(from: rows, db: db)
     }
   }
@@ -1242,7 +1242,7 @@ extension API {
             (revision.startsAt.desc(), event.id.desc())
           }
           .selectStar()
-          .fetchAll(db)
+          .fetch.all(db)
         return try snapshots(from: rows, db: db)
       } else {
         let rows =
@@ -1266,7 +1266,7 @@ extension API {
             (revision.startsAt.desc(), event.id.desc())
           }
           .selectStar()
-          .fetchAll(db)
+          .fetch.all(db)
         return try snapshots(from: rows, db: db)
       }
     }
@@ -1306,7 +1306,7 @@ extension API {
             (revision.startsAt.desc(), event.id.desc())
           }
           .selectStar()
-          .fetchAll(db)
+          .fetch.all(db)
         let eventRows = rows.map { event, _, revision in (event, revision) }
         return try snapshots(from: eventRows, db: db)
       } else {
@@ -1341,7 +1341,7 @@ extension API {
             (revision.startsAt.desc(), event.id.desc())
           }
           .selectStar()
-          .fetchAll(db)
+          .fetch.all(db)
         let eventRows = rows.map { event, _, revision in (event, revision) }
         return try snapshots(from: eventRows, db: db)
       }
@@ -1372,7 +1372,7 @@ extension API {
       }
       .selectStar()
       .limit(1)
-      .fetchAll(db)
+      .fetch.all(db)
       .first
     guard let row else { return nil }
     return try snapshots(from: [row], db: db).first
@@ -1388,7 +1388,7 @@ extension API {
       try EventRegionScoreRuleRecord
       .where { $0.eventID.in(eventIDs) }
       .order { ($0.eventID, $0.wineRegionTypeID) }
-      .fetchAll(db)
+      .fetch.all(db)
     let scoreRulesByEventID = Dictionary(grouping: scoreRules, by: \.eventID)
     return rows.map { event, revision in
       EventSnapshot(
@@ -1469,7 +1469,7 @@ extension API {
             .and($0.status.in([EventParticipantRecord.Status.registered, .attended]))
         }
         .limit(1)
-        .fetchOne(db)
+        .fetch.one(db)
       return participant != nil
     }
   }
@@ -1485,19 +1485,21 @@ extension API {
           .and($0.userID.eq(userID))
       }
       .limit(1)
-      .fetchOne(db)
+      .fetch.one(db)
   }
 
   fileprivate func activeParticipantCount(
     eventID: UUID,
     db: PostgreSQL.Connection
   ) throws(ISO_9075.Error) -> Int {
-    try EventParticipantRecord
+    let count =
+      try EventParticipantRecord
       .where {
         $0.eventID.eq(eventID)
           .and($0.status.in([EventParticipantRecord.Status.registered, .attended]))
       }
-      .fetchCount(db)
+      .fetch.count(db)
+    return Int(count.rawValue)
   }
 
   fileprivate func lockEventRegistration(
@@ -1530,7 +1532,7 @@ extension API {
             .and($0.userID.eq(userID))
         }
         .limit(1)
-        .fetchOne(db)
+        .fetch.one(db)
       return image != nil
     }
   }
@@ -1547,7 +1549,7 @@ extension API {
             .and($0.organizerUserID.eq(userID))
         }
         .limit(1)
-        .fetchOne(db)
+        .fetch.one(db)
       return event != nil
     }
   }
@@ -1570,7 +1572,7 @@ extension API {
             .and($0.eventID.eq(eventID))
         }
         .limit(1)
-        .fetchOne(db)
+        .fetch.one(db)
     }
   }
 
@@ -1594,7 +1596,7 @@ extension API {
           (question.questionNumber, question.id)
         }
         .selectStar()
-        .fetchAll(db)
+        .fetch.all(db)
       return rows.map { question, revision in
         EventQuestionSnapshot(question: question, revision: revision)
       }
@@ -1608,7 +1610,7 @@ extension API {
     try EventQuestionCorrectAnswerRecord
       .where { $0.eventQuestionID.eq(questionID) }
       .limit(1)
-      .fetchOne(db)
+      .fetch.one(db)
   }
 
   fileprivate func eventQuestionResponse(
@@ -1622,7 +1624,7 @@ extension API {
           .and($0.userID.eq(userID))
       }
       .limit(1)
-      .fetchOne(db)
+      .fetch.one(db)
   }
 
   fileprivate func latestCorrectAnswerRevision(
@@ -1633,7 +1635,7 @@ extension API {
       .where { $0.eventQuestionCorrectAnswerID.eq(answerID) }
       .order { ($0.createdAt.desc(), $0.id.desc()) }
       .limit(1)
-      .fetchOne(db)
+      .fetch.one(db)
   }
 
   fileprivate func correctAnswerVarietyIDs(
@@ -1643,7 +1645,7 @@ extension API {
     let rows =
       try EventQuestionCorrectAnswerVarietyRecord
       .where { $0.eventQuestionCorrectAnswerRevisionID.eq(revisionID) }
-      .fetchAll(db)
+      .fetch.all(db)
     return rows.map(\.wineVarietyID).sorted { $0.uuidString < $1.uuidString }
   }
 
@@ -1655,7 +1657,7 @@ extension API {
       .where { $0.eventQuestionResponseID.eq(responseID) }
       .order { ($0.submittedAt.desc(), $0.id.desc()) }
       .limit(1)
-      .fetchOne(db)
+      .fetch.one(db)
   }
 
   fileprivate func responseVarietyIDs(
@@ -1665,7 +1667,7 @@ extension API {
     let rows =
       try EventQuestionResponseVarietyRecord
       .where { $0.eventQuestionResponseRevisionID.eq(revisionID) }
-      .fetchAll(db)
+      .fetch.all(db)
     return rows.map(\.wineVarietyID).sorted { $0.uuidString < $1.uuidString }
   }
 
@@ -1898,7 +1900,7 @@ extension API {
       try ImageRecord
         .where { $0.id.eq(imageID) }
         .limit(1)
-        .fetchOne(db)
+        .fetch.one(db)
     }
     if let image {
       try? await cacheImage(image)

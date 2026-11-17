@@ -4,9 +4,7 @@ import ISO_9075_Call_Level_Interface
 import ISO_9075_Foundation
 import Logging
 import PostgreSQL
-import PostgresNIO
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 
 extension API {
@@ -53,7 +51,7 @@ extension API {
       try UserEmail
         .where { $0.userID.eq(userID) }
         .order { ($0.createdAt.asc(), $0.email.asc()) }
-        .fetchAll(db)
+        .fetch.all(db)
     }
   }
 }

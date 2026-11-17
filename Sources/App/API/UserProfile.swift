@@ -5,9 +5,7 @@ import ISO_9075_Call_Level_Interface
 import ISO_9075_Foundation
 import Logging
 import PostgreSQL
-import PostgresNIO
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 import UUIDV7
 import Valkey
@@ -194,7 +192,7 @@ extension API {
           )
         }
         .limit(1)
-        .fetchOne(db)
+        .fetch.one(db)
     }
 
     guard let profile else { return nil }
@@ -242,7 +240,7 @@ extension API {
             .and($0.userID.eq(userID))
         }
         .limit(1)
-        .fetchOne(db)
+        .fetch.one(db)
     }
     guard let image else { return nil }
 

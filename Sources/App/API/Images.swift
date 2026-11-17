@@ -4,9 +4,7 @@ import ISO_9075_Call_Level_Interface
 import ISO_9075_Foundation
 import Logging
 import PostgreSQL
-import PostgresNIO
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 import UUIDV7
 
@@ -71,7 +69,7 @@ extension API {
         try ImageRecord
           .where({ $0.cloudflareImageID.eq(bodyData.imageID) })
           .limit(1)
-          .fetchOne(db)
+          .fetch.one(db)
       }
       if let existingImage {
         guard existingImage.userID == userID else {
@@ -115,7 +113,7 @@ extension API {
           try ImageRecord
           .where({ $0.cloudflareImageID.eq(bodyData.imageID) })
           .limit(1)
-          .fetchOne(db)
+          .fetch.one(db)
       }
     } catch {
       AppRequestContext.current?.logger.appError(
