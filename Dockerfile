@@ -21,6 +21,7 @@ RUN swift sdk install \
 # Set up a build area
 WORKDIR /build
 
+# Preserve the lock: the legacy beta-2 tag sorts above beta.3 (Issue #382).
 # First just resolve dependencies.
 # This creates a cached layer that can be reused
 # as long as your Package.swift/Package.resolved
@@ -28,7 +29,7 @@ WORKDIR /build
 COPY ./Package.* ./
 RUN --mount=type=cache,target=/build/.build,sharing=locked \
     --mount=type=cache,target=/root/.cache,sharing=locked \
-    swift package resolve
+    swift package --force-resolved-versions resolve
 
 # Copy entire repo into container
 COPY . .
@@ -36,7 +37,7 @@ COPY . .
 # Build the application, with optimizations, as a fully static executable using the Static Linux SDK
 RUN --mount=type=cache,target=/build/.build,sharing=locked \
     --mount=type=cache,target=/root/.cache,sharing=locked \
-    swift build -c release \
+    swift build --force-resolved-versions -c release \
     --product "App" \
     --swift-sdk "$(uname -m)-swift-linux-musl"
 
@@ -45,14 +46,14 @@ WORKDIR /staging
 
 # Copy main executable to staging area
 RUN --mount=type=cache,target=/build/.build,sharing=locked \
-    cp "$(swift build --package-path /build -c release --swift-sdk "$(uname -m)-swift-linux-musl" --show-bin-path)/App" ./
+    cp "$(swift build --force-resolved-versions --package-path /build -c release --swift-sdk "$(uname -m)-swift-linux-musl" --show-bin-path)/App" ./
 
 # Copy static swift backtracer binary to staging area
 RUN cp "/usr/libexec/swift/linux/swift-backtrace-static" ./
 
 # Copy resources bundled by SPM to staging area
 RUN --mount=type=cache,target=/build/.build,sharing=locked \
-    find -L "$(swift build --package-path /build -c release --swift-sdk "$(uname -m)-swift-linux-musl" --show-bin-path)/" -regex '.*\.resources$' -exec cp -Ra {} ./ \;
+    find -L "$(swift build --force-resolved-versions --package-path /build -c release --swift-sdk "$(uname -m)-swift-linux-musl" --show-bin-path)/" -regex '.*\.resources$' -exec cp -Ra {} ./ \;
 
 # Copy any resouces from the public directory and views directory if the directories exist
 # Ensure that by default, neither the directory nor any of its contents are writable.
