@@ -18,7 +18,9 @@ let package = Package(
     .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.28.1"),
     .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.5.0"),
     .package(
-      url: "https://github.com/hummingbird-project/swift-openapi-hummingbird.git", from: "2.1.0"),
+      url: "https://github.com/hummingbird-project/swift-openapi-hummingbird.git",
+      from: "2.1.0"
+    ),
     .package(url: "https://github.com/apple/swift-openapi-generator.git", from: "1.14.4"),
     .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.9.0"),
     .package(url: "https://github.com/zunda-pixel/cloudflare-swift.git", from: "0.8.3"),
