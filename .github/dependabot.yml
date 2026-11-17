@@ -11,6 +11,16 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      # Validate the Buildx setup and image build actions together.
+      docker-build:
+        patterns:
+          - "docker/setup-buildx-action"
+          - "docker/build-push-action"
+      # Validate Google Cloud authentication and SDK setup together.
+      google-cloud:
+        patterns:
+          - "google-github-actions/*"
     cooldown:
       default-days: 7
 
