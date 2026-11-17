@@ -34,7 +34,7 @@ let package = Package(
     .package(url: "https://github.com/zunda-pixel/swift-currency.git", from: "0.0.1"),
     .package(
       url: "https://github.com/brokenhandsio/swift-webauthn.git",
-      revision: "38b75016ed3550c7b08b70af05538a807f507285"),
+      from: "1.0.0-beta.3"),
     .package(url: "https://github.com/zunda-pixel/UUIDV7.git", branch: "replace-to-swift-testing"),
   ],
   targets: [

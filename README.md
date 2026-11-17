@@ -162,3 +162,12 @@ After implementing, run `swift build` and `swift test` with PostgreSQL, Valkey, 
 
 Follow [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md): satisfy the Issue's dependencies, then implement with an independent Review Agent running in parallel. Shared rules source: [vinoguessr/.github@13fb97569cc4](https://github.com/vinoguessr/.github/tree/13fb97569cc4d4323a439db52f55ce962e63c12f).
 <!-- /vinoguessr-foundation -->
+
+
+## WebAuthn release resolution
+
+Package.swift declares the official upstream release with `from: "1.0.0-beta.3"`. Package.resolved records that version at `38b75016ed3550c7b08b70af05538a807f507285`, the same source used before the declaration change. Other dependency pins remain unchanged.
+
+The upstream also has a differently named `1.0.0-beta-2` tag. SwiftPM orders that tag above `beta.3`, and an unqualified resolve can select the legacy implementation and old SwiftCBOR. Regenerate the lock with `swift package resolve swift-webauthn --version 1.0.0-beta.3`. Keep the committed lock and use `--force-resolved-versions` for package resolution, builds, and tests. CI and the image build enforce this policy. Check that the WebAuthn version and revision are correct, all other pins remain unchanged, and old SwiftCBOR is absent.
+
+This resolution constraint is tracked in [Issue #382](https://github.com/vinoguessr/vinoguessr-api/issues/382). Recheck it when upstream publishes a compatible release. Remove the targeted regeneration step after adopting a correctly ordered release and confirming that an unqualified resolve no longer selects the legacy implementation. This does not close the remaining passkey testing work in that Issue.
