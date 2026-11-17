@@ -30,7 +30,9 @@ let package = Package(
     ),
     .package(url: "https://github.com/swift-compositions/swift-sql.git", branch: "main"),
     .package(url: "https://github.com/zunda-pixel/swift-currency.git", from: "0.0.1"),
-    .package(url: "https://github.com/zunda-pixel/swift-webauthn.git", branch: "add-init"),
+    .package(
+      url: "https://github.com/brokenhandsio/swift-webauthn.git",
+      revision: "38b75016ed3550c7b08b70af05538a807f507285"),
     .package(url: "https://github.com/zunda-pixel/UUIDV7.git", branch: "replace-to-swift-testing"),
   ],
   targets: [
