@@ -6,9 +6,7 @@ import ISO_9075_Call_Level_Interface
 import ISO_9075_Foundation
 import Logging
 import PostgreSQL
-import PostgresNIO
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 import Valkey
 import WebAuthn
@@ -82,7 +80,7 @@ extension API {
         try UserEmail
           .where { $0.email.eq(email) }
           .select { ($0.userID) }
-          .fetchOne(db)
+          .fetch.one(db)
       }
     } catch {
       AppRequestContext.current?.logger.appError(

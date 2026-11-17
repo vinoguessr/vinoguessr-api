@@ -8,11 +8,10 @@ import Hummingbird
 import Images
 import JWTKit
 import Logging
-import NIOPosix
+import NIOSSL
 import OTel
 import OpenAPIHummingbird
 import PostgreSQL
-import PostgresNIO
 import ServiceLifecycle
 import Synchronization
 import Valkey
@@ -28,6 +27,20 @@ private let observabilityBootstrapped: Mutex<Bool> = .init(false)
 struct OTPSecretKeyConfigurationError: Error, CustomStringConvertible {
   var description: String {
     "OTP secret key must be valid Base64"
+  }
+}
+
+struct DatabaseService: Service {
+  let database: PostgreSQL.Database
+
+  func run() async throws {
+    do {
+      try await gracefulShutdown()
+    } catch {
+      await database.close()
+      throw error
+    }
+    await database.close()
   }
 }
 
@@ -150,7 +163,7 @@ func buildApplication(
     ),
     services: [
       observability,
-      databaseClient.client,
+      DatabaseService(database: databaseClient),
       cache,
     ],
     logger: logger
@@ -243,32 +256,22 @@ func makeDatabase(
   config: ConfigReader,
   logger: Logger
 ) async throws -> PostgreSQL.Database {
-  let postgresTLS: PostgresClient.Configuration.TLS =
+  let postgresTLS: PostgreSQL.Configuration.TLS =
     switch arguments.env {
     case .develop:
-      .disable
+      .disabled
     case .production:
-      .require(.clientDefault)
+      .verified
     }
-  let databaseClient: PostgresClient
-
-  do {
-    let config = config.scoped(to: "postgres")
-    let postgresConfig = try PostgresClient.Configuration(
-      host: config.requiredString(forKey: "hostname"),
-      username: config.requiredString(forKey: "user"),
-      password: config.requiredString(forKey: "password"),
-      database: config.requiredString(forKey: "db"),
-      tls: postgresTLS
-    )
-
-    databaseClient = PostgresClient(
-      configuration: postgresConfig,
-      backgroundLogger: logger
-    )
-  }
-
-  return PostgreSQL.Database(client: databaseClient, threadPool: .singleton, logger: logger)
+  let config = config.scoped(to: "postgres")
+  let configuration = try PostgreSQL.Configuration(
+    host: config.requiredString(forKey: "hostname"),
+    user: config.requiredString(forKey: "user"),
+    password: config.requiredString(forKey: "password"),
+    database: config.requiredString(forKey: "db"),
+    tls: postgresTLS
+  )
+  return try PostgreSQL.Database(configuration: configuration)
 }
 
 func makeWebAuth(config: ConfigReader) throws -> WebAuthnManager {

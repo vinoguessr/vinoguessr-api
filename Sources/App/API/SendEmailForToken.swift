@@ -8,9 +8,7 @@ import ISO_9075_Foundation
 import Logging
 import OpenAPIRuntime
 import PostgreSQL
-import PostgresNIO
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 import Valkey
 import WebAuthn
@@ -33,7 +31,7 @@ extension API {
         try UserEmail
           .where { $0.email.eq(email) }
           .select { $0.email }
-          .fetchOne(db) != nil
+          .fetch.one(db) != nil
       }
     } catch {
       AppRequestContext.current?.logger.appError(

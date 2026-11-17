@@ -4,9 +4,7 @@ import ISO_9075_Call_Level_Interface
 import ISO_9075_Foundation
 import Logging
 import PostgreSQL
-import PostgresNIO
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 import Valkey
 
@@ -112,7 +110,7 @@ extension API {
         .where { user in
           user.id.in(ids)
         }
-        .fetchAll(db)
+        .fetch.all(db)
     }
   }
 

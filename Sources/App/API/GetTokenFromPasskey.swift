@@ -5,7 +5,6 @@ import ISO_9075_Foundation
 import Logging
 import PostgreSQL
 import SQL
-import SQLKit
 import SQL_Foundation_Integration
 import UUIDV7
 import Valkey
@@ -81,7 +80,7 @@ extension API {
         let passkeyCredential =
           try PasskeyCredential
           .where { $0.id.eq(credential.id.asString()) }
-          .fetchOne(db)
+          .fetch.one(db)
 
         let signCount =
           try PasskeyCredentialSignCount
@@ -89,7 +88,7 @@ extension API {
           .order { ($0.signCount.desc(), $0.id.desc()) }
           .select { $0.signCount }
           .limit(1)
-          .fetchOne(db)
+          .fetch.one(db)
 
         return (passkeyCredential, signCount)
       }

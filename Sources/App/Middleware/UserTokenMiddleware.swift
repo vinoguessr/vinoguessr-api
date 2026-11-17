@@ -2,7 +2,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import JWTKit
-import PostgresNIO
+import Logging
 
 struct UserTokenMiddleware<Context: RequestContext>: RouterMiddleware {
   var jwtKeyCollection: JWTKeyCollection
